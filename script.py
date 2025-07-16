@@ -1,4 +1,3 @@
-import pygame 
 # Make all the piece classes
 pieces = ["King","Queen","Knight","Bishop","Rook","Pawn"]
 class Piece:
@@ -10,7 +9,18 @@ class Piece:
 
 
 class King(Piece):
+    def pos_in_check(self,pos,board):
+            for row in range(8):
+                for col in range(8):
+                    if board[row][col][1] is not None and board[row][col][1].colour != self.colour:
+                        piece = board[row][col][1]
+                        if pos in piece.get_legal_moves(board):
+                            return True
+            return False
+    
+
     def get_legal_moves(self,board):
+
         self.availablepositions = []
         def validpos(dim):
             start_pos = self.position[dim]-1 #This row/col will be the starting point in the for loop (included)
@@ -30,17 +40,11 @@ class King(Piece):
                 if(board[row][col][1] == None and self.pos_in_check([row,col],board) == False):
                     self.availablepositions.append([row,col])
         # Remove the original position 
-        self.availablepositions.remove(self.position)
+        if self.position in self.availablepositions:
+            self.availablepositions.remove(self.position)
         return self.availablepositions
     
-    def pos_in_check(self,pos,board):
-        for row in range(8):
-            for col in range(8):
-                if board[row][col][1] is not None and board[row][col][1].colour != self.colour:
-                    piece = board[row][col][1]
-                    if pos in piece.get_legal_moves(board):
-                        return True
-        return False
+    
 
 
 
@@ -67,11 +71,12 @@ class Knight(Piece):
         for move in moves:
             if (0 <= move[0] <= 7 and 0 <= move[1] <= 7 ):
                 self.availablepositions.append(move)
+        return self.availablepositions
 
 class Bishop(Piece):
     def get_legal_moves(self,board):
         row, col = self.position
-        diag_pos , diag_neg,antidiag_pos,antidiag_neg = True
+        diag_pos , diag_neg,antidiag_pos,antidiag_neg = True,True,True,True
         self.availablepositions = []
         # Diagonal: 
         for d in range(1, 8):
@@ -111,7 +116,7 @@ class Bishop(Piece):
 class Rook(Piece):
     def get_legal_moves(self,board):
         row, col = self.position
-        row_pos,row_neg,col_pos,col_neg = True
+        row_pos,row_neg,col_pos,col_neg = True,True,True,True
         
         self.availablepositions = []
         for d in range(1,8):
@@ -224,37 +229,27 @@ class board():
     def getboard(self):
         return self.board
 
-    def drawboard(self,surface):
-        
-        def getcolourtuple(colour):
-            if (colour == 'W'):
-                return (255,255,255)
-            if (colour == 'B'):
-                return (43, 45, 48) # Lighter shade of black
-        
-        # Calculate center position
-        tile_size = 65
-        BOARD_SIZE = tile_size * 8
-        start_x = (800 - BOARD_SIZE) // 2  # Center horizontally
-        start_y = (600 - BOARD_SIZE) // 2  # Center vertically
-        
-        for i in range(8):
-            for j in range(8):
-                tile_colour = self.board[i][j][0]
-                x = start_x + (j * tile_size)
-                y = start_y + (i * tile_size) 
-                pygame.draw.rect(surface, getcolourtuple(tile_colour), pygame.Rect(x, y, tile_size, tile_size))
-                if (board[i][j][1] != None):
-                    piece = self.board[i][j][1]
-                    piece_name = (type(piece).__name__)
-                    downcased_piece_name = piece_name[0].lower() + piece_name[1:]
-                    piece_colour = piece.colour
-                    downcased_colour = piece_colour[0].lower() + piece_colour[1:]
-                    file_name = f"{downcased_colour}-{downcased_piece_name}"   
-                    image = pygame.image.load("ChessGame/pieces-basic-png/" + file_name + ".png")
-                    image = pygame.transform.scale(image, (65, 65))
-                    surface.blit(image, (x,y))
-
+    def drawboard(self):
+        PIECE_SYMBOLS = {
+            'Black': {
+                'King': '♔', 'Queen': '♕', 'Rook': '♖',
+                'Bishop': '♗', 'Knight': '♘', 'Pawn': '♙'
+            },
+            'White': {
+                'King': '♚', 'Queen': '♛', 'Rook': '♜',
+                'Bishop': '♝', 'Knight': '♞', 'Pawn': '♟'
+            }
+        }
+        for i in range(7,-1,-1):
+            row = self.board[i]
+            for square in row:
+                piece = square[1]
+                if piece is None:
+                    print('.', end=' ')
+                else:
+                    symbol = PIECE_SYMBOLS[piece.colour][type(piece).__name__]
+                    print(symbol, end=' ')
+            print()
         
     
     def update_board(self,move):
@@ -269,60 +264,112 @@ class board():
 
 
 class ChessGame():
-    def __init__(self,surface):
-        self.surface = surface
+    def __init__(self,):
         self.moves = []
         self.board = board()
         self.colour_to_move = 'White'
         self.result = None
+    
+    def get_board(self):
+        # Return the current board state
+        return self.board.getboard()
+
     def make_move(self,colour,move):
         initial_row,initial_col = move[0][0],move[0][1]
-        piece = self.board[initial_row][initial_col][1]
+        piece = self.board.board[initial_row][initial_col][1]
         if piece == None:
             print("No piece selected!")
         elif piece.colour != colour:
             print("Its the other colour's turn")
         else:
-            if (move[1] in piece.get_legal_moves()):
+            if (move[1] in piece.get_legal_moves(board = self.board.getboard())):
                 self.moves.append(move)
                 self.board.update_board(move = move)
-                self.board.drawboard(surface= self.surface)
+                
             else:
                 print("Not a valid position to move")
-    def is_checkmate(self,colour):
-        #First find the king 
-        in_check = False
+    def is_checkmate(self, colour):
+        # Find the king
+        king_pos = None
         for i in range(8):
             for j in range(8):
                 piece = self.board.board[i][j][1]
                 if isinstance(piece, King) and piece.colour == colour:
-                    king_pos = [i,j]
+                    king_pos = [i, j]
                     king = piece
                     break
-        #Now check if king is in check and has nowhere to go 
-        legal_moves = king.get_legal_moves()
+            if king_pos:
+                break
+
+        # Check if the king is in check
+        in_check = king.pos_in_check(king_pos, self.board.getboard())
+        if not in_check:
+            return False
+
+        # Check if the king can escape
+        legal_moves = king.get_legal_moves(board=self.board.getboard())
+        for move in legal_moves:
+            # Simulate the move
+            original_pos = king.position
+            captured_piece = self.board.board[move[0]][move[1]][1]
+            self.board.board[move[0]][move[1]][1] = king
+            self.board.board[original_pos[0]][original_pos[1]][1] = None
+            king.position = move
+
+            # Check if the king is still in check
+            king_in_check = king.pos_in_check(move, self.board.getboard())
+
+            # Undo the move
+            self.board.board[original_pos[0]][original_pos[1]][1] = king
+            self.board.board[move[0]][move[1]][1] = captured_piece
+            king.position = original_pos
+
+            if not king_in_check:
+                return False
+
+        # Check if any other piece can block the check or capture the attacker
         for i in range(8):
             for j in range(8):
                 piece = self.board.board[i][j][1]
-                if (piece != None):
-                    if (king_pos in piece.get_legal_moves()):
-                        in_check = True
-                    a = set(piece.get_legal_moves())
-                    legal_moves = list(set(legal_moves) - a.intersection(set(legal_moves)))
-                    if (len(legal_moves) == 0):
-                        return True
+                if piece and piece.colour == colour:
+                    legal_moves = piece.get_legal_moves(self.board.getboard())
+                    for move in legal_moves:
+                        # Simulate the move
+                        original_pos = piece.position
+                        captured_piece = self.board.board[move[0]][move[1]][1]
+                        self.board.board[move[0]][move[1]][1] = piece
+                        self.board.board[original_pos[0]][original_pos[1]][1] = None
+                        piece.position = move
+
+                        # Check if the king is still in check
+                        king_in_check = king.pos_in_check(king_pos, self.board.getboard())
+
+                        # Undo the move
+                        self.board.board[original_pos[0]][original_pos[1]][1] = piece
+                        self.board.board[move[0]][move[1]][1] = captured_piece
+                        piece.position = original_pos
+
+                        if not king_in_check:
+                            return False
+
+        return True
     
-    def play(self):
+    def play(self,move):
         def get_opp_col(col):
             if (col == 'White'):
                 return 'Black'
             else:
                 return 'White'
-            
+        self.make_move(colour = self.colour_to_move,move = move)
+        if (self.is_checkmate(colour = get_opp_col(self.colour_to_move))):
+            self.result = f'{self.colour_to_move} wins!'
+            print(self.result)
+        self.colour_to_move = get_opp_col(self.colour_to_move)
 
-        while(self.result == None):
-            player_move = input(f" Enter move ({self.colour_to_move} to move) ")
-            self.make_move(colour = self.colour_to_move,move = player_move)
-            if (self.is_checkmate(colour = get_opp_col(self.colour_to_move))):
-                self.result = f'{self.colour_to_move} wins!'
-            self.colour_to_move = get_opp_col(self.colour_to_move)
+
+
+#TryoutGame = ChessGame()
+#Tryoutboard = TryoutGame.board
+#Tryoutboard.drawboard()
+#TryoutGame.play(move = [[1,4],[3,4]])
+#Tryoutboard.drawboard()
