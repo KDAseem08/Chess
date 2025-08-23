@@ -1,23 +1,61 @@
 # Make all the piece classes
 pieces = ["King","Queen","Knight","Bishop","Rook","Pawn"]
+
 class Piece:
+    """ 
+    This is a generic Piece class. Each Piece on the chess board has 2 properties; position on the chess board and it's colour.
+    The chess board is assummed to be an 8x8 array in python.
+
+    """
     def __init__(self, position,colour):
-        self.position = position
-        self.colour = colour
+        self.position = position # Position is of form [row,col] (0 <= row <= 7) & (0 <= col <= 7)
+        self.colour = colour # colour can be either "White" or "Black"
+
     def get_legal_moves(self,board):
+        """ 
+        This method returns a list of positions that the very specific piece can make on board. 
+        It is a generic method since each piece moves differently and is meant to be overriden by the specific piece class like "King" or "Queen" etc.
+
+        """
         pass
 
 
 class King(Piece):
     def pos_in_check(self,pos,board):
-            for row in range(8):
-                for col in range(8):
-                    if board[row][col][1] is not None and board[row][col][1].colour != self.colour:
-                        piece = board[row][col][1]
-                        if pos in piece.get_legal_moves(board):
+        """
+        Checks if the King piece is in check. board is a 3 Dimensional Array. Imagine an 8 x 8 array and in each position is ['Chess Tile Colour' , 'Piece'].
+        If there is no piece on that tile then position is ['Chess Tile Colour' , None]
+
+        """
+
+        for row in range(8):
+            for col in range(8):
+                if board[row][col][1] is not None and board[row][col][1].colour != self.colour: # If there is a piece at this position and it is an enemy piece.
+                    piece = board[row][col][1]   #Store that piece and check it's legal moves
+                    if isinstance(piece, King):
+                        if pos in piece.squares_covered():
                             return True
-            return False
+                    elif pos in piece.get_legal_moves(board): # If the current pos (position) of the king lies in those legal moves, then the king is in check.
+                        return True
+        return False
     
+    def squares_covered(self):
+        covered_squares = []
+        def validpos(dim):
+            start_pos = self.position[dim]-1 #This row/col will be the starting point in the for loop (included)
+            end_pos = self.position[dim]+2 #This row/col will be the stopping point in the for loop (not included)
+            if (start_pos < 0):
+                start_pos = 0 
+            if (end_pos > 7):
+                end_pos = 7
+            return (start_pos,end_pos)
+
+        start_row, end_row = validpos(dim = 0)
+        start_col, end_col = validpos(dim = 1)
+        for row in range(start_row,end_row):
+            for col in range(start_col,end_col):
+                covered_squares.append([row,col])
+        return covered_squares
 
     def get_legal_moves(self,board):
 
@@ -27,27 +65,24 @@ class King(Piece):
             end_pos = self.position[dim]+2 #This row/col will be the stopping point in the for loop (not included)
             if (start_pos < 0):
                 start_pos = 0 
-            if (end_pos > 8):
+            if (end_pos > 7):
                 end_pos = 7
             return (start_pos,end_pos)
 
-        start_row,end_row = validpos(dim=0)
+        start_row, end_row = validpos(dim = 0)
         start_col, end_col = validpos(dim = 1)
         for row in range(start_row,end_row):
             for col in range(start_col,end_col):
-                # The king can't move into a check or a space that's occupied by another piece
-                #Will handle the check for later
-                if(board[row][col][1] == None and self.pos_in_check([row,col],board) == False):
-                    self.availablepositions.append([row,col])
+                if(board[row][col][1] == None and self.pos_in_check([row,col],board) == False): # If there is no piece in this position and my king doesn't move into a check 
+                    self.availablepositions.append([row,col]) # Then it's a valid positin to move to so append it to the list.
+                elif(board[row][col][1] is not None and board[row][col][1].colour != self.colour): # If there is an enemy piece
+                    if(self.pos_in_check([row,col],board) == False): # If by capturing it, the king falls into check (it means that it is an illegal capture) so we make sure that's not the case
+                        self.availablepositions.append([row,col])
+                
         # Remove the original position 
         if self.position in self.availablepositions:
-            self.availablepositions.remove(self.position)
+            self.availablepositions.remove(self.position) # Obviously the king cannot move into the same position (thats equivalent to not making a move at all) so we remove it.
         return self.availablepositions
-    
-    
-
-
-
 
 
 class Queen(Piece):
@@ -65,11 +100,11 @@ class Knight(Piece):
     def get_legal_moves(self,board):
         row, col = self.position
         self.availablepositions = []
-        moves = [[row+2,col+1],[row+2,col-1],[row-2,col+1],[row-2,col-1],
-                 [row+1,col+2],[row+1,col-2],[row-1,col+2],[row-1,col-2]]
+        moves = [[row+2,col+1],[row+2,col-1],[row-2,col+1],[row-2,col-1], # Vertical L
+                 [row+1,col+2],[row+1,col-2],[row-1,col+2],[row-1,col-2]] # Horizontal L
         
         for move in moves:
-            if (0 <= move[0] <= 7 and 0 <= move[1] <= 7 ):
+            if (0 <= move[0] <= 7 and 0 <= move[1] <= 7 ): # Check if the position actually exists on the board.
                 self.availablepositions.append(move)
         return self.availablepositions
 
@@ -81,15 +116,16 @@ class Bishop(Piece):
         # Diagonal: 
         for d in range(1, 8):
             if (row + d < 8 and col + d < 8 and diag_pos == True):
-                if (board[row+d][col+d][1] != None):
-                    if board[row+d][col+d][1].colour != self.colour:  # Capture opponent piece
-                        self.availablepositions.append([row+d, col+d])
-                    diag_pos = False
+                if (board[row+d][col+d][1] != None): # if there is a piece in that position
+                    if board[row+d][col+d][1].colour != self.colour:  # And it's an enemy piece
+                        self.availablepositions.append([row+d, col+d]) # It could be captured so add that position
+                    diag_pos = False # You can no longer continue in this direction as it is blocked
                 else:
                     self.availablepositions.append([row + d, col + d])
+            
             if row - d >= 0 and col - d >= 0 and diag_neg == True:
-                if (board[row-d][col-d][1] != None):
-                    if board[row-d][col-d][1].colour != self.colour:  # Capture opponent piece
+                if (board[row-d][col-d][1] != None): 
+                    if board[row-d][col-d][1].colour != self.colour:   
                         self.availablepositions.append([row-d, col-d])
                     diag_neg = False
                 else:
@@ -98,14 +134,15 @@ class Bishop(Piece):
         for d in range(1, 8):
             if row + d < 8 and col - d >= 0 and antidiag_neg == True:
                 if (board[row+d][col-d][1] != None):
-                    if board[row+d][col-d][1].colour != self.colour:  # Capture opponent piece
+                    if board[row+d][col-d][1].colour != self.colour:  
                         self.availablepositions.append([row+d, col-d])
                     antidiag_neg = False
                 else:
                     self.availablepositions.append([row + d, col - d])
+                
             if row - d >= 0 and col + d < 8 and antidiag_pos == True:
                 if (board[row-d][col+d][1] != None):
-                    if board[row-d][col+d][1].colour != self.colour:  # Capture opponent piece
+                    if board[row-d][col+d][1].colour != self.colour:  
                         self.availablepositions.append([row-d, col+d])
                     antidiag_pos = False
                 else:
@@ -160,6 +197,8 @@ class Rook(Piece):
         return self.availablepositions
 
 class Pawn(Piece):
+    # I need to add promotion ability  - This will be handled on the board 
+    # capturing via en-passant as well
     def get_legal_moves(self,board):
         # Assuming position of a pawn can never be row 0 or 8 . They are forced to promote .
         row,col = self.position[0],self.position[1]
@@ -196,21 +235,28 @@ class Pawn(Piece):
                         self.availablepositions.append([row-2,col])
                 else:
                     self.availablepositions.append([row-1,col])
+
         return self.availablepositions
 
-class board():
+class Board():
     def __init__(self):
-        self.board = [ [ ['W', None] for _ in range(8) ] for _ in range(8) ]
+        self.board = [ [ ['W', None] for _ in range(8) ] for _ in range(8) ] # Create an 8 x 8 board where each tile is white and contains no pieces.
         for i in range(0,8):
             for j in range(0,8):
                 if ((i+j)%2 == 0):
-                    self.board[i][j] = ['B',None]
+                    self.board[i][j] = ['B',None] # Make a checkerboard pattern where every white tile is adjacent to a black tile.
         
         def setpawns(board,row,colour):
+            """
+            Sets up a row of pawns at the given input row and of the given input colour.
+            """
             for j in range(8):
                 board[row][j][1] = Pawn(position=[row,j],colour = colour)
         
         def set_king_row(board,row,colour):
+            """
+            Sets up the initial king row of a given colour. I guess we can figure out what colour it is from the given row - but it's unnecessary to add this logic in. Just type the damn colour lol.
+            """
             board[row][0][1] = Rook(position=[row,0],colour = colour)
             board[row][7][1] = Rook(position=[row,7],colour = colour)
             board[row][1][1] = Knight(position=[row,1],colour = colour)
@@ -266,7 +312,7 @@ class board():
 class ChessGame():
     def __init__(self,):
         self.moves = []
-        self.board = board()
+        self.board= Board()
         self.colour_to_move = 'White'
         self.result = None
     
@@ -363,13 +409,17 @@ class ChessGame():
         self.make_move(colour = self.colour_to_move,move = move)
         if (self.is_checkmate(colour = get_opp_col(self.colour_to_move))):
             self.result = f'{self.colour_to_move} wins!'
-            print(self.result)
         self.colour_to_move = get_opp_col(self.colour_to_move)
 
-
-
-#TryoutGame = ChessGame()
-#Tryoutboard = TryoutGame.board
-#Tryoutboard.drawboard()
-#TryoutGame.play(move = [[1,4],[3,4]])
-#Tryoutboard.drawboard()
+TrialGame = ChessGame()
+TrialGameboard = TrialGame.board
+TrialGameboard.drawboard()
+print('------------------')
+while(TrialGame.is_checkmate("White") == False and TrialGame.is_checkmate("Black") == False):
+    user_input = input("Enter your move  in the format initial_row,initial_col,final_row,final_col: ")
+    move_list = list(map(int,user_input.split(',')))
+    pairs = [move_list[i:i+2] for i in range(0,len(move_list),2)]
+    TrialGame.play(move = pairs)
+    TrialGameboard.drawboard()
+    print('------------------')
+print(TrialGame.result)
