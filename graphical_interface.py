@@ -6,7 +6,7 @@ screen = pygame.display.set_mode((800, 600))
 
 # Window features
 pygame.display.set_caption("Chess")
-icon = pygame.image.load("/Users/aseem/Dev/Python/ChessGame/chess_icon.png")
+icon = pygame.image.load("C:\\Users\\aseem\\Dev\\Python\\Chess\\chess_icon.png")
 pygame.display.set_icon(icon)
 base_font = pygame.font.Font(None, 32)
 user_text = ''
@@ -44,9 +44,33 @@ def drawboard(surface, board):
                 piece_colour = piece.colour
                 downcased_colour = piece_colour[0].lower() + piece_colour[1:]
                 file_name = f"{downcased_colour}-{downcased_piece_name}"
-                image = pygame.image.load("ChessGame/pieces-basic-png/" + file_name + ".png")
+                image = pygame.image.load("pieces-basic-png/" + file_name + ".png")
                 image = pygame.transform.scale(image, (65, 65))
                 surface.blit(image, (x, y))
+
+def parse_algebraic(input):
+    """
+    Input should be like "a2-a4". I need to convert that into "0113" so that I could feed it into parse_move.
+    """
+    acceptable_rows = ['a','b','c','d','e','f','g','h']
+    acceptable_cols = [1,2,3,4,5,6,7,8]
+
+    # Check if input is valid
+    try: 
+        if ((input[0] not in acceptable_rows) | (input[3] not in acceptable_rows)):
+            raise ValueError("Invalid input format. A valid move should be like a2-a4. Rows should be from a to h")
+        elif ((int(input[1]) not in acceptable_cols) | (int(input[4]) not in acceptable_cols)):
+            raise ValueError("Invalid input format. A valid move should be like a2-a4. Cols should be from a to h")
+        else:
+            result = [
+                [(int(input[1]) - 1), (ord(input[0]) - 97)],
+                [(int(input[4]) - 1), (ord(input[3]) - 97)],
+            ]
+            return result
+
+    except ValueError as e:
+        print(e)
+        return None
 
 
 def parse_move(user_input):
@@ -80,15 +104,13 @@ while running:
                         user_text = user_text[:-1]
                 elif event.key == pygame.K_RETURN:
                     # Process the move when Enter is pressed
-                    move = parse_move(user_text)
+                    move = parse_algebraic(user_text)
                     if move:
                         if not Current_Game.is_checkmate(Current_Game.colour_to_move):
                             Current_Game.play(move)
-                            Current_Game.board.drawboard()
                             board_state = Current_Game.get_board()
                             drawboard(screen, board_state)
                         else:
-                            print(f"Checkmate! {Current_Game.colour_to_move} loses.")
                             running = False
                     user_text = ''  # Reset user_text for the next move
                 else:
