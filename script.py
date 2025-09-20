@@ -1,4 +1,5 @@
 # Make all the piece classes
+import copy
 pieces = ["King", "Queen", "Knight", "Bishop", "Rook", "Pawn"]
 
 
@@ -302,43 +303,49 @@ class Pawn(Piece):
 
 
 class Board:
-    def __init__(self):
-        self.board = [
-            [["W", None] for _ in range(8)] for _ in range(8)
-        ]  # Create an 8 x 8 board where each tile is white and contains no pieces.
-        for i in range(0, 8):
-            for j in range(0, 8):
-                if (i + j) % 2 == 0:
-                    self.board[i][j] = [
-                        "B",
-                        None,
-                    ]  # Make a checkerboard pattern where every white tile is adjacent to a black tile.
+            
 
-        def setpawns(board, row, colour):
-            """
-            Sets up a row of pawns at the given input row and of the given input colour.
-            """
-            for j in range(8):
-                board[row][j][1] = Pawn(position=[row, j], colour=colour)
+    def setpawns(self,board, row, colour):
+        """
+        Sets up a row of pawns at the given input row and of the given input colour.
+        """
+        for j in range(8):
+            board[row][j][1] = Pawn(position=[row, j], colour=colour)
 
-        def set_king_row(board, row, colour):
-            """
-            Sets up the initial king row of a given colour. I guess we can figure out what colour it is from the given row - but it's unnecessary to add this logic in. Just type the damn colour lol.
-            """
-            board[row][0][1] = Rook(position=[row, 0], colour=colour)
-            board[row][7][1] = Rook(position=[row, 7], colour=colour)
-            board[row][1][1] = Knight(position=[row, 1], colour=colour)
-            board[row][6][1] = Knight(position=[row, 6], colour=colour)
-            board[row][2][1] = Bishop(position=[row, 2], colour=colour)
-            board[row][5][1] = Bishop(position=[row, 5], colour=colour)
-            board[row][3][1] = Queen(position=[row, 3], colour=colour)
-            board[row][4][1] = King(position=[row, 4], colour=colour)
+    def set_king_row(self,board, row, colour):
+        """
+        Sets up the initial king row of a given colour. I guess we can figure out what colour it is from the given row - but it's unnecessary to add this logic in. Just type the damn colour lol.
+        """
+        board[row][0][1] = Rook(position=[row, 0], colour=colour)
+        board[row][7][1] = Rook(position=[row, 7], colour=colour)
+        board[row][1][1] = Knight(position=[row, 1], colour=colour)
+        board[row][6][1] = Knight(position=[row, 6], colour=colour)
+        board[row][2][1] = Bishop(position=[row, 2], colour=colour)
+        board[row][5][1] = Bishop(position=[row, 5], colour=colour)
+        board[row][3][1] = Queen(position=[row, 3], colour=colour)
+        board[row][4][1] = King(position=[row, 4], colour=colour)
 
-        setpawns(self.board, 1, colour="White")
-        setpawns(self.board, 6, colour="Black")
-        set_king_row(self.board, 0, colour="White")
-        set_king_row(self.board, 7, colour="Black")
 
+    def __init__(self,custom_position = None):
+        
+        if (custom_position == None):
+            self.board = [[["W", None] for _ in range(8)] for _ in range(8)]  # Create an 8 x 8 board where each tile is white and contains no pieces.
+            for i in range(0, 8):
+                for j in range(0, 8):
+                    if (i + j) % 2 == 0:
+                        self.board[i][j] = [
+                            "B",
+                            None,
+                        ]  # Make a checkerboard pattern where every white tile is adjacent to a black tile.
+
+            self.setpawns(self.board, 1, colour="White")
+            self.setpawns(self.board, 6, colour="Black")
+            self.set_king_row(self.board, 0, colour="White")
+            self.set_king_row(self.board, 7, colour="Black")
+        else:
+            self.board = custom_position
+
+    
     def getboard(self):
         return self.board
 
@@ -383,6 +390,10 @@ class Board:
         self.board[final_row][final_col][1] = piece
 
 
+
+        
+
+
 class ChessGame:
     def __init__(
         self,
@@ -397,6 +408,7 @@ class ChessGame:
         return self.board.getboard()
 
     def make_move(self, colour, move):
+        # Move  = [[0,1],[1,0]]
         initial_row, initial_col = move[0][0], move[0][1]
         piece = self.board.board[initial_row][initial_col][1]
         if piece == None:
@@ -405,11 +417,45 @@ class ChessGame:
         elif piece.colour != colour:
             print("Its the other colour's turn")
             return False
+        
         else:
             if move[1] in piece.get_legal_moves(board=self.board.getboard()):
-                self.moves.append(move)
-                self.board.update_board(move=move)
-                return True
+                # Check if Piece is pinned
+                # Simulate the move 
+                
+                # Make a copy of the board
+                def check_pin():
+                    temp_board_object = copy.deepcopy(self.board)
+                    temp_board_object.update_board(move=move)
+
+
+                    #Now check if the king of this colour is in check
+                    king_pos = None
+                    for i in range(8):
+                        for j in range(8):
+                            temp_piece = temp_board_object.getboard()[i][j][1]
+                            if isinstance(temp_piece,King) and (temp_piece.colour == piece.colour):
+                                king_pos = [i,j]
+                                king = temp_piece
+                                break
+                        if(king_pos):
+                            break
+
+                    # Check if the king is in check
+                    in_check = king.pos_in_check(king_pos, temp_board_object.board)
+                    return in_check
+                
+                if (check_pin()):
+                    print("Piece is pinned and hence cannot move!")
+                    return False
+
+                else:
+                    self.moves.append(move)
+                    self.board.update_board(move=move)
+                    return True
+
+
+
 
             else:
                 print("Not a valid position to move")

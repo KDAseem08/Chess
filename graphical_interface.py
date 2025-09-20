@@ -27,10 +27,30 @@ def drawboard(surface, board):
 
     # Calculate center position
     tile_size = 65
-    BOARD_SIZE = tile_size * 8
-    start_x = (800 - BOARD_SIZE) // 2  # Center horizontally
-    start_y = (600 - BOARD_SIZE) // 2  # Center vertically
+    BOARD_SIZE = tile_size * 8 #  65 * 8 = 520
+    start_x = (800 - BOARD_SIZE) // 2  # Center horizontally  # 140
+    start_y = (600 - BOARD_SIZE) // 2  # Center vertically  # 40
 
+    def draw_rows():
+        start_h = start_x - (tile_size // 2)
+        start_v = start_y + (tile_size // 2)
+        for i in range(8):
+            text = f"{(8-i)}"
+            font = pygame.font.Font(None,25)
+            surface = font.render(text,True,(0,0,0))
+            screen.blit(surface,(start_h,start_v + (i * tile_size)))
+
+    def draw_cols():
+        start_h = start_x + (tile_size // 2)
+        start_v = start_y + BOARD_SIZE + (tile_size // 4)
+        for i in range(8):
+            text = f"{chr(ord('a') + i)}"
+            font = pygame.font.Font(None, 25)
+            surface = font.render(text, True, (0, 0, 0))
+            screen.blit(surface, (start_h+ (i * tile_size), start_v) )
+
+    draw_rows()
+    draw_cols()
     for i in range(8):
         for j in range(8):
             tile_colour = board[7-i][j][0]
@@ -116,7 +136,7 @@ while running:
                 else:
                     user_text += event.unicode
 
-    screen.fill((0, 255, 255))
+    screen.fill((0, 245, 220))
 
     # Draw the input box
     if active:
