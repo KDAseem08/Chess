@@ -151,7 +151,9 @@ class Knight(Piece):
             if (
                 0 <= move[0] <= 7 and 0 <= move[1] <= 7
             ):  # Check if the position actually exists on the board.
-                self.availablepositions.append(move)
+                piece = board[move[0]][move[1]][1]
+                if ((piece != None) and (piece.colour == self.colour)):
+                    self.availablepositions.append(move)
         return self.availablepositions
 
 
@@ -303,7 +305,6 @@ class Pawn(Piece):
 
 
 class Board:
-            
 
     def setpawns(self,board, row, colour):
         """
@@ -325,9 +326,8 @@ class Board:
         board[row][3][1] = Queen(position=[row, 3], colour=colour)
         board[row][4][1] = King(position=[row, 4], colour=colour)
 
-
     def __init__(self,custom_position = None):
-        
+
         if (custom_position == None):
             self.board = [[["W", None] for _ in range(8)] for _ in range(8)]  # Create an 8 x 8 board where each tile is white and contains no pieces.
             for i in range(0, 8):
@@ -345,7 +345,6 @@ class Board:
         else:
             self.board = custom_position
 
-    
     def getboard(self):
         return self.board
 
@@ -385,13 +384,20 @@ class Board:
         initial_row, initial_col = move[0][0], move[0][1]
         final_row, final_col = move[1][0], move[1][1]
         piece = self.board[initial_row][initial_col][1]
+
+        if((type(piece).__name__ == "Pawn")):
+            if((piece.colour == "White") and (final_row == 7)):
+                # Make it a White Queen . (Position will be modified later on in this method)
+                piece = Queen(position= [initial_row,initial_col],colour="White")
+                
+            elif (((piece.colour == "Black") and (final_row == 0))):
+                # Make it a Black Queen . (Position will be modified later on in this method)
+                piece = Queen(position=[initial_row, initial_col], colour="Black")
+                
+
         self.board[initial_row][initial_col][1] = None
         piece.position = move[1]
         self.board[final_row][final_col][1] = piece
-
-
-
-        
 
 
 class ChessGame:
@@ -453,9 +459,6 @@ class ChessGame:
                     self.moves.append(move)
                     self.board.update_board(move=move)
                     return True
-
-
-
 
             else:
                 print("Not a valid position to move")
@@ -560,4 +563,3 @@ class ChessGame:
 #     print(TrialGame.result)
 # if (__name__ == "__main__"):
 #     main()
-
