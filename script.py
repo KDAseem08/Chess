@@ -148,11 +148,12 @@ class Knight(Piece):
         ]  # Horizontal L
 
         for move in moves:
-            if (
-                0 <= move[0] <= 7 and 0 <= move[1] <= 7
-            ):  # Check if the position actually exists on the board.
+            if (0 <= move[0] <= 7 and 0 <= move[1] <= 7):  # Check if the position actually exists on the board.
                 piece = board[move[0]][move[1]][1]
                 if ((piece != None) and (piece.colour == self.colour)):
+                    # There is our own piece there
+                    pass
+                else :
                     self.availablepositions.append(move)
         return self.availablepositions
 
