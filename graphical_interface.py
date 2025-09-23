@@ -1,5 +1,8 @@
 import pygame
 import script
+import chessAI
+import random
+import time
 
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
@@ -16,7 +19,7 @@ colour_active = pygame.Color('lightskyblue3')
 colour_passive = pygame.Color('gray15')
 colour = colour_passive
 active = False
-
+count = 0
 
 def drawboard(surface, board):
     def getcolourtuple(colour):
@@ -124,13 +127,20 @@ while running:
                         user_text = user_text[:-1]
                 elif event.key == pygame.K_RETURN:
                     # Process the move when Enter is pressed
+                    #moves = chessAI.GetAllLegalMoves(board=Current_Game.get_board(),colour=Current_Game.colour_to_move)
+                    #print(moves)
+                    #move = random.choice(moves)
+                    #print("----")
+                    #print(move)
                     move = parse_algebraic(user_text)
                     if move:
-                        if not Current_Game.is_checkmate(Current_Game.colour_to_move):
-                            Current_Game.play(move)
-                            board_state = Current_Game.get_board()
-                            drawboard(screen, board_state)
-                        else:
+                        # if not Current_Game.is_checkmate(Current_Game.colour_to_move):
+                        #if (count < 5):
+                        Current_Game.play(move)
+                        board_state = Current_Game.get_board()
+                        drawboard(screen, board_state)
+                        count += 1
+                    else:
                             running = False
                     user_text = ''  # Reset user_text for the next move
                 else:
