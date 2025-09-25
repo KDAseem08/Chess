@@ -5,7 +5,7 @@ import random
 #   Player selects a random piece
 #   and makes one of the legal moves.
 
-pieces = ["Pawn","Rook","Knight","Bishop","King","Queen"]
+piece_values= {"Pawn":1,"Rook":5,"Knight":3,"Bishop":3,"King":4,"Queen":9}
 
 
 def GetAllLegalMoves(board,colour):
@@ -23,9 +23,20 @@ def GetAllLegalMoves(board,colour):
                     moves.append(newmove)
     return moves
             
-
-
+def eval(board):
+    white_sum = 0
+    black_sum = 0
+    for row in range(8):
+        for col in range(8):
+            
+            piece = board[row][col][1]
+            if (piece != None):
+                if (piece.colour == "White"):
+                    white_sum += piece_values[type(piece).__name__]
+                else:
+                    black_sum += piece_values[type(piece).__name__]
     
+    return white_sum - black_sum
 
 
 
@@ -33,10 +44,12 @@ def GetAllLegalMoves(board,colour):
 Game = script.ChessGame()
 board = Game.get_board()
 
-Player1 = "White"
-Player2 = "Black"
-count = 0
-# while((Game.is_checkmate(Player1) == False) and (Game.is_checkmate(Player2) == False) and (count < 10)):
+#print(eval(board))
+
+
+# Play Random Moves each turn. 
+#count = 0
+# while((Game.is_checkmate("White") == False) and (Game.is_checkmate("White") == False) and (count < 10)):
 #     colour_to_play = Game.colour_to_move
 #     moves = GetAllLegalMoves(Game.get_board(),colour=colour_to_play)
 #     random_move = random.choice(moves)

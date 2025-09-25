@@ -3,13 +3,16 @@ import script
 import chessAI
 import random
 import time
+import os
 
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 
 # Window features
 pygame.display.set_caption("Chess")
-icon = pygame.image.load("C:\\Users\\aseem\\Dev\\Python\\Chess\\chess_icon.png")
+current_dir = os.path.dirname(__file__)
+icon_path = os.path.join(current_dir,"chess_icon.png")
+icon = pygame.image.load(icon_path)
 pygame.display.set_icon(icon)
 base_font = pygame.font.Font(None, 32)
 user_text = ''
@@ -67,7 +70,8 @@ def drawboard(surface, board):
                 piece_colour = piece.colour
                 downcased_colour = piece_colour[0].lower() + piece_colour[1:]
                 file_name = f"{downcased_colour}-{downcased_piece_name}"
-                image = pygame.image.load("pieces-basic-png/" + file_name + ".png")
+                piece_path = os.path.join(current_dir, "pieces-basic-png", file_name + ".png")
+                image = pygame.image.load(piece_path)
                 image = pygame.transform.scale(image, (65, 65))
                 surface.blit(image, (x, y))
 
