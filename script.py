@@ -534,6 +534,11 @@ class ChessGame:
         return True
 
     def play(self, move):
+        if self.result is not None:
+            print("Game is already over!")
+            return False
+        
+        
         def get_opp_col(col):
             if col == "White":
                 return "Black"
@@ -546,6 +551,7 @@ class ChessGame:
             print(self.result)
         if (x):
             self.colour_to_move = get_opp_col(self.colour_to_move)
+            return True
 
 # def main():
 #     TrialGame = ChessGame()
@@ -564,3 +570,6 @@ class ChessGame:
 #     print(TrialGame.result)
 # if (__name__ == "__main__"):
 #     main()
+
+
+# get_legal_moves are not actual legal_moves
