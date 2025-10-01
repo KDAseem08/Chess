@@ -1,28 +1,9 @@
 import pygame
-import script
-import chessAI
+import Engine
+#import chessAI
 import random
 import time
 import os
-
-pygame.init()
-screen = pygame.display.set_mode((800, 600))
-
-# Window features
-pygame.display.set_caption("Chess")
-current_dir = os.path.dirname(__file__)
-icon_path = os.path.join(current_dir,"chess_icon.png")
-icon = pygame.image.load(icon_path)
-pygame.display.set_icon(icon)
-base_font = pygame.font.Font(None, 32)
-user_text = ''
-input_rect = pygame.Rect(0, 0, 200, 50)
-Current_Game = script.ChessGame()
-colour_active = pygame.Color('lightskyblue3')
-colour_passive = pygame.Color('gray15')
-colour = colour_passive
-active = False
-count = 0
 
 def drawboard(surface, board):
     def getcolourtuple(colour):
@@ -112,57 +93,77 @@ def parse_move(user_input):
     except ValueError as e:
         print(e)
         return None
+    
 
+    
+if __name__ == "__main__":
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
 
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if input_rect.collidepoint(event.pos):
-                active = True
-            else:
-                active = False
-        if event.type == pygame.KEYDOWN:
-            if active:
-                if event.key == pygame.K_BACKSPACE:
-                    if user_text != '':  # If there is no text.
-                        user_text = user_text[:-1]
-                elif event.key == pygame.K_RETURN:
-                    # Process the move when Enter is pressed
-                    #moves = chessAI.GetAllLegalMoves(board=Current_Game.get_board(),colour=Current_Game.colour_to_move)
-                    #print(moves)
-                    #move = random.choice(moves)
-                    #print("----")
-                    #print(move)
-                    move = parse_algebraic(user_text)
-                    if move:
-                        # if not Current_Game.is_checkmate(Current_Game.colour_to_move):
-                        #if (count < 5):
-                        Current_Game.play(move)
-                        board_state = Current_Game.get_board()
-                        drawboard(screen, board_state)
-                        count += 1
-                    else:
-                            running = False
-                    user_text = ''  # Reset user_text for the next move
+    # Window features
+    pygame.display.set_caption("Chess")
+    current_dir = os.path.dirname(__file__)
+    icon_path = os.path.join(current_dir, "chess_icon.png")
+    icon = pygame.image.load(icon_path)
+    pygame.display.set_icon(icon)
+    base_font = pygame.font.Font(None, 32)
+    user_text = ""
+    input_rect = pygame.Rect(0, 0, 200, 50)
+    Current_Game = Engine.ChessGame()
+    colour_active = pygame.Color("lightskyblue3")
+    colour_passive = pygame.Color("gray15")
+    colour = colour_passive
+    active = False
+    count = 0
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_rect.collidepoint(event.pos):
+                    active = True
                 else:
-                    user_text += event.unicode
+                    active = False
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_BACKSPACE:
+                        if user_text != '':  # If there is no text.
+                            user_text = user_text[:-1]
+                    elif event.key == pygame.K_RETURN:
+                        # Process the move when Enter is pressed
+                        #moves = chessAI.GetAllLegalMoves(board=Current_Game.get_board(),colour=Current_Game.colour_to_move)
+                        #print(moves)
+                        #move = random.choice(moves)
+                        #print("----")
+                        #print(move)
+                        move = parse_algebraic(user_text)
+                        if move:
+                            # if not Current_Game.is_checkmate(Current_Game.colour_to_move):
+                            #if (count < 5):
+                            Current_Game.play(move)
+                            board_state = Current_Game.get_board()
+                            drawboard(screen, board_state)
+                            count += 1
+                        else:
+                                running = False
+                        user_text = ''  # Reset user_text for the next move
+                    else:
+                        user_text += event.unicode
 
-    screen.fill((0, 245, 220))
+        screen.fill((0, 245, 220))
 
-    # Draw the input box
-    if active:
-        colour = colour_active
-    else:
-        colour = colour_passive
-    pygame.draw.rect(screen, colour, input_rect, 2)
-    text_surface = base_font.render(user_text, True, (255, 255, 255))
-    screen.blit(text_surface, (input_rect.x + 5, input_rect.y + 5))
+        # Draw the input box
+        if active:
+            colour = colour_active
+        else:
+            colour = colour_passive
+        pygame.draw.rect(screen, colour, input_rect, 2)
+        text_surface = base_font.render(user_text, True, (255, 255, 255))
+        screen.blit(text_surface, (input_rect.x + 5, input_rect.y + 5))
 
-    # Draw the board
-    board_state = Current_Game.get_board()
-    drawboard(screen, board_state)
+        # Draw the board
+        board_state = Current_Game.get_board()
+        drawboard(screen, board_state)
 
-    pygame.display.update()
+        pygame.display.update()
