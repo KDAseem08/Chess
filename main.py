@@ -149,6 +149,10 @@ while (True):
         currentNode = Node(game=TestGame)
         expand_to_depth(currentNode, depth=2, colour_to_move=TestGame.colour_to_move)
 
+
+        # Call minimax to calculate minimax values for all nodes
+        minimax(currentNode, depth=2, maximising_player=False)
+
         print("-------Depth 1 Children --------")
         for child in currentNode.children:
             print(f"Child eval: {child.eval_score}")
@@ -156,10 +160,7 @@ while (True):
             print("---------------------------------------------------------")
 
         print("-------End of Depth 1 Children --------")
-
-        # Call minimax to calculate minimax values for all nodes
-        minimax(currentNode, depth=2, maximising_player=False)
-
+        
         best_child = GetBestMove(currentNode, TestGame.colour_to_move)
         if best_child is None:
             print(f"No valid moves for {TestGame.colour_to_move}. Game over.")

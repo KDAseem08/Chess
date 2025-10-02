@@ -634,7 +634,7 @@ class ChessGame:
             for j in range(8):
                 piece = self.board.board[i][j][1]
                 if piece and piece.colour == colour:
-                    legal_moves = piece.get_legal_moves(self.board.getboard())
+                    legal_moves = piece.get_legal_moves(self.board.getboard(),ignore_pins = True)
                     for move in legal_moves:
                         # Simulate the move
                         original_pos = piece.position
@@ -678,4 +678,6 @@ def main():
 
 
 if (__name__ == "__main__"):
-    main()
+    game = ChessGame(fen_string="rnbqkbnr/ppppp1pp/8/5p1Q/4P3/8/PPPP1PPP/RNB1KBNR w - - 0 1")
+    game.board.drawboard()
+    print(game.is_checkmate("Black"))
