@@ -9,7 +9,6 @@ import graphical_interface
 
 class Node():
     def __init__(self,game,eval_score = None, children = None):
-        # data should be in form (Board(), evaluate_position(Board().getboard()))
         if (children == None):
             children = []
         self.game = game
@@ -17,9 +16,10 @@ class Node():
         self.children = children
 
 
-def Expand(node: Node,colour_to_move):
+def Expand(node: Node):
     board_object = node.game.board
     board_array = board_object.getboard()
+    colour_to_move = node.game.colour_to_move
     for legal_move in HelperMethods.GetAllLegalMoves(board_array,colour = colour_to_move):
         # Need to create a temp game to check
         temp_game = copy_game(board_object, colour_to_move)
@@ -27,15 +27,14 @@ def Expand(node: Node,colour_to_move):
             node.children.append(Node(game=temp_game))
 
 
-def expand_to_depth(node, depth, colour_to_move):
+def expand_to_depth(node, depth):
     if depth == 0:
         return
-    Expand(node, colour_to_move)
+    Expand(node)
     if not node.children:
         return
-    next_colour = "Black" if colour_to_move == "White" else "White"
     for child in node.children:
-        expand_to_depth(child, depth - 1, next_colour)
+        expand_to_depth(child, depth - 1)
 
 
 def copy_game(board_object, colour_to_move):
@@ -147,7 +146,7 @@ while (True):
         print("Bot thinking")
         #score = evaluate_position(TestGame, TestGame.colour_to_move)
         currentNode = Node(game=TestGame)
-        expand_to_depth(currentNode, depth=2, colour_to_move=TestGame.colour_to_move)
+        expand_to_depth(currentNode, depth=2)
 
 
         # Call minimax to calculate minimax values for all nodes
