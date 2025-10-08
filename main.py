@@ -49,7 +49,7 @@ def copy_game(board_object, colour_to_move):
     return new_game
 
 
-def minimax(node,depth,maximising_player):
+def minimax(node,depth,alpha,beta,maximising_player):
     # Maximising_player is True if the colour of that player is White . False if colour is Black.
     if depth == 0 or not node.children:
         node.eval_score = evaluate_position(node.game, node.game.colour_to_move)
@@ -58,28 +58,38 @@ def minimax(node,depth,maximising_player):
     if maximising_player:
         max_eval = float("-inf")
         for child in node.children:
-            eval = minimax(child,depth - 1,False)
+            eval = minimax(child,depth - 1,alpha,beta,False)
             max_eval = max(max_eval,eval)
+            alpha = max(alpha,eval)
+            if beta <= alpha:
+                break
         node.eval_score = max_eval
         return max_eval
     else:
         min_eval = float("inf")
         for child in node.children:
-            eval = minimax(child,depth - 1,True)
+            eval = minimax(child,depth - 1,alpha,beta,True)
             min_eval = min(min_eval,eval)
+            beta = min(beta,eval)
+            if beta <= alpha:
+                break
         node.eval_score = min_eval
         return min_eval
 
 def GetBestMove(node,colour):
     if (node.children == []):
         return None
-    if any(child.eval_score is None for child in node.children):
-        raise ValueError("Some child nodes have no minimax value set!")
-    if colour == "White":
-        best_child = max(node.children, key=lambda child: child.eval_score)
-    else:
-        best_child = min(node.children, key=lambda child: child.eval_score)
-
+    target = node.eval_score
+    if target == None:
+        raise ValueError(f"Something's gone wrong in the minimax as it couldn't find the eval_score of {node}")
+    best_child = None
+    for child in node.children:
+        if child.eval_score == target:
+            best_child = child
+            break
+    if best_child == None:
+        raise ValueError("Best child could not be found for some reason")
+    
     return best_child
 
 
@@ -150,15 +160,7 @@ while (True):
 
 
         # Call minimax to calculate minimax values for all nodes
-        minimax(currentNode, depth=2, maximising_player=False)
-
-        print("-------Depth 1 Children --------")
-        for child in currentNode.children:
-            print(f"Child eval: {child.eval_score}")
-            child.game.board.drawboard()
-            print("---------------------------------------------------------")
-
-        print("-------End of Depth 1 Children --------")
+        minimax(currentNode, depth=2,alpha = float("inf"),beta = -float("inf"), maximising_player=False)
         
         best_child = GetBestMove(currentNode, TestGame.colour_to_move)
         if best_child is None:
