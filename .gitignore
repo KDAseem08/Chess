@@ -1,1 +1,3 @@
 ChessVenv/
+__pycache__/
+*.pyc
